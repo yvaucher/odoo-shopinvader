@@ -154,3 +154,12 @@ class LocomotiveBackend(models.Model):
             send_notification.delay(
                 session, notif._name, notif.id, record._name, record.id)
         return True
+
+    def _extract_configuration(self):
+        return {}
+
+    @api.multi
+    def export_store_configuration(self):
+        self.ensure_one()
+        config = self._extract_configuration()
+        return ('test', '.csv')
