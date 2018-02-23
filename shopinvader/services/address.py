@@ -15,23 +15,23 @@ class AddressService(Component):
 
     # The following method are 'public' and can be called from the controller.
 
-    def search(self, domain=None):
+    def search(self, **params):
         if not self.partner:
             return []
         else:
-            return self._list(domain)
+            return self._paginate_search('res.partner', **params)
 
     def create(self, **params):
         params['parent_id'] = self.partner.id
         if not params.get('type'):
             params['type'] = 'other'
         self.env['res.partner'].create(self._prepare_params(params))
-        return self._list()
+        return self.search()
 
     def update(self, _id, **params):
         address = self._get_address(_id)
         address.write(self._prepare_params(params, update=True))
-        res = self._list()
+        res = self.search()
         if address.address_type == 'profile':
             res['store_cache'] = {'customer': self._to_json(address)[0]}
         return res
@@ -41,7 +41,7 @@ class AddressService(Component):
         if self.partner == address:
             raise Forbidden('Can not delete the partner account')
         address.active = False
-        return self._list()
+        return self.search()
 
     # The following method are 'private' and should be never never NEVER call
     # from the controller.
@@ -113,12 +113,8 @@ class AddressService(Component):
             'id': {'coerce': to_int, 'required': True},
             }
 
-    def _list(self, domain=None):
-        if not domain:
-            domain = []
-        domain = [('id', 'child_of', self.partner.id)] + domain
-        partners = self.env['res.partner'].search(domain)
-        return {'data': self._to_json(partners)}
+    def _get_base_search_domain(self):
+        return [('id', 'child_of', self.partner.id)]
 
     def _get_address(self, _id):
         domain = [('id', '=', _id)]

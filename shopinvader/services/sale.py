@@ -20,26 +20,14 @@ class SaleService(Component):
         order = self._get(_id)
         return self._to_json(order)[0]
 
+    def _get_base_search_domain():
+        return [
+            ('partner_id', '=', self.partner.id),
+            ('shopinvader_backend_id', '=', self.locomotive_backend.id),
+            ]
+
     def search(self, **params):
-        if params.get('id'):
-            order = self._get(params['id'])
-            return self._to_json(order)[0]
-        else:
-            domain = [
-                ('partner_id', '=', self.partner.id),
-                ('shopinvader_backend_id', '=', self.locomotive_backend.id),
-                ]
-            domain += params.get('domain', [])
-            sale_obj = self.env['sale.order']
-            total_count = sale_obj.search_count(domain)
-            page = params.get('page', 1)
-            per_page = params.get('per_page', 5)
-            orders = sale_obj.search(
-                domain, limit=per_page, offset=per_page*(page-1))
-            return {
-                'size': total_count,
-                'data': self._to_json(orders),
-                }
+        return self._paginate_search('sale.order', **params)
 
     # Validator
     def _validator_get(self):
