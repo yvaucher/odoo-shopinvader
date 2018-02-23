@@ -29,6 +29,7 @@ class LocomotiveBackend(models.Model):
             ('backend_id', '=', self.id),
             ('lang_id', '=', lang.id),
             ('record_id.ean13', '!=', False),
+            ('google_categ_id', '!=', False),
             ]
 
     def _get_absolute_url(self, url):
