@@ -29,8 +29,9 @@ class ShopinvaderVariant(models.Model):
                     if binding.backend_id == self.backend_id:
                         variants = [(v.record_id.sequence, v)
                                     for v in binding.shopinvader_variant_ids]
-                        variants.sort()
-                        res.append(variants[0][1].id)
+                        if variants:
+                            variants.sort()
+                            res.append(variants[0][1].id)
         return res
 
     def _compute_link(self):
