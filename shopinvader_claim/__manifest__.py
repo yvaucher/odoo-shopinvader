@@ -6,16 +6,14 @@
 {
     "name": "Shopinvader Claim",
     "summary": "Shopinvader Claim Management",
-    "version": "8.0.1.0.0",
+    "version": "10.0.1.0.0",
     "category": "e-commerce",
     "website": "https://akretion.com",
     "author": "Akretion",
     "license": "AGPL-3",
-    "application": False,
     "installable": True,
     "external_dependencies": {
         "python": [],
-        "bin": [],
     },
     "depends": [
         "onchange_helper",
@@ -25,7 +23,7 @@
     "data": [
     ],
     "demo": [
-        "demo/claim_demo.xml",
+        # "demo/claim_demo.xml",
     ],
     "qweb": [
     ]

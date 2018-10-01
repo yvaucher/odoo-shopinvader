@@ -3,46 +3,35 @@
 # Benoît GUILLOT <benoit.guillot@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from openerp.addons.shopinvader.services.helper import (
-    secure_params, ShopinvaderService, to_int)
-from openerp.addons.shopinvader.backend import shopinvader
-from openerp.exceptions import MissingError, Warning as UserError
-from openerp.tools.translate import _
+
+from odoo.addons.base_rest.components.service import to_int
+from odoo.addons.component.core import Component
+from odoo.exceptions import MissingError, UserError
+from odoo.tools.translate import _
 
 
-@shopinvader
-class ClaimService(ShopinvaderService):
-    _model_name = 'crm.claim'
+class ClaimService(Component):
+    _inherit = 'base.shopinvader.service'
+    _name = 'shopinvader.claim.service'
+    _usage = 'claims'
+    _expose_model = 'crm.claim'
 
     # The following method are 'public' and can be called from the controller.
-    # All params are untrusted so please check it by using the decorator
-    # secure params and the linked validator !
+    # All params are untrusted so please check it !
 
-    @secure_params
-    def get(self, params):
-        domain = [
-            ('partner_id', '=', self.partner.id),
-            ('shopinvader_backend_id', '=', self.backend_record.id)]
-        domain += params.get('domain', [])
-        claim_obj = self.env['crm.claim']
-        total_count = claim_obj.search_count(domain)
-        page = params.get('page', 1)
-        per_page = params.get('per_page', 5)
-        claims = claim_obj.search(
-            domain, limit=per_page, offset=per_page*(page-1))
-        return {
-            'size': total_count,
-            'data': self._to_json(claims),
-            }
+    def get(self, _id):
+        return self._to_json(self._get(_id))[0]
 
-    @secure_params
+    def search(self, **params):
+        return self._paginate_search(**params)
+
     def create(self, params):
-        vals = self._prepare_claim(params)
-        claim = self.env['crm.claim'].create(vals)
+        claim = self.env['crm.claim'].create(self._prepare_claim(params))
         self.backend_record._send_notification('claim_confirmation', claim)
-        return {'data': self._to_json(claim)}
+        # Choose the good one
+        # return {'data': self._to_json(claim)}
+        return self.search()
 
-    @secure_params
     def update(self, params):
         claim = self.env['crm.claim'].search([
             ('partner_id', '=', self.partner.id),
@@ -50,7 +39,7 @@ class ClaimService(ShopinvaderService):
             ('id', '=', params['id'])])
         if not claim:
             raise MissingError(_('Claim not found'))
-        if params.get('add_message', ''):
+        if params.get('add_message'):
             claim.message_post(
                 body=params['add_message'],
                 type='comment',
@@ -59,12 +48,12 @@ class ClaimService(ShopinvaderService):
                 author_id=self.partner.id)
         return {'data': self._to_json(claim)}
 
-    # The following method are 'private' and should be never never NEVER call
-    # from the controller.
-    # All params are trusted as they have been checked before
-
     def _validator_get(self):
+        return {}
+
+    def _validator_search(self):
         return {
+            'id': {'coerce': to_int},
             'per_page': {
                 'coerce': to_int,
                 'nullable': True,
@@ -73,11 +62,15 @@ class ClaimService(ShopinvaderService):
                 'coerce': to_int,
                 'nullable': True,
                 },
-            'domain': {
-                'coerce': self.to_domain,
+            'scope': {
+                'type': 'dict',
                 'nullable': True,
                 },
-            }
+        }
+
+    # The following method are 'private' and should be never never NEVER call
+    # from the controller.
+    # All params are trusted as they have been checked before
 
     def _validator_create(self):
         return {
@@ -190,32 +183,42 @@ class ClaimService(ShopinvaderService):
         return vals
 
 
-@shopinvader
-class ClaimSubjectService(ShopinvaderService):
-    _model_name = 'crm.case.categ'
+class ClaimSubjectService(Component):
+    _inherit = 'shopinvader.base.service'
+    _name = 'shopinvader.crm.claim.category'
+    _usage = 'claim'
+    _expose_model = 'crm.claim.category'
 
     # The following method are 'public' and can be called from the controller.
     # All params are untrusted so please check it by using the decorator
     # secure params and the linked validator !
 
-    @secure_params
-    def get(self, params):
-        domain = [('object_id.model', '=', 'crm.claim')]
-        domain += params.get('domain', [])
-        subjects = self.env['crm.case.categ'].search(domain)
-        return {'data': self._to_json(subjects)}
-
+    def get(self, _id):
+        categ = self._get(_id)
+        return self._to_json(categ)[0]
     # The following method are 'private' and should be never never NEVER call
     # from the controller.
     # All params are trusted as they have been checked before
 
     def _validator_get(self):
+        return {}
+
+    def _validator_search(self):
         return {
-            'domain': {
-                'coerce': self.to_domain,
+            'id': {'coerce': to_int},
+            'per_page': {
+                'coerce': to_int,
                 'nullable': True,
                 },
-            }
+            'page': {
+                'coerce': to_int,
+                'nullable': True,
+                },
+            'scope': {
+                'type': 'dict',
+                'nullable': True,
+                },
+        }
 
     def _json_parser(self):
         res = [
