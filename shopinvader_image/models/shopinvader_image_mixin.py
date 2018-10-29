@@ -34,7 +34,8 @@ class ShopinvaderImageMixin(models.AbstractModel):
             '%s_resize_ids' % self._name.replace('.', '_')]
         for image_relation in self[self._image_field]:
             url_key = self._get_image_url_key(image_relation)
-            image_data = {}
+            tag = image_relation.tag_id and image_relation.tag_id.name or ''
+            image_data = {'tag_name': tag}
             for resize in resizes:
                 thumbnail = image_relation.image_id.get_or_create_thumbnail(
                     resize.size_x,
