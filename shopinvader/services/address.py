@@ -4,7 +4,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo.addons.component.core import Component
-from .helper import to_int, secure_params
+from .helper import to_int, to_bool, secure_params
 from werkzeug.exceptions import Forbidden, NotFound
 
 
@@ -75,9 +75,9 @@ class AddressService(Component):
                 'coerce': to_int,
                 'required': True,
                 'nullable': False},
-            'is_company': {'coerce': bool},
-            'opt_in': {'coerce': bool},
-            'opt_out': {'coerce': bool},
+            'is_company': {'coerce': to_bool},
+            'opt_in': {'coerce': to_bool},
+            'opt_out': {'coerce': to_bool},
             }
         if 'partner_firstname' in self.env.registry._init_modules:
             res.update({
