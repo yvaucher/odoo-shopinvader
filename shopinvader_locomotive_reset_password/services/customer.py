@@ -8,7 +8,7 @@ from datetime import datetime
 
 
 class Customer(Component):
-    _inherit='shopinvader.customer.service'
+    _inherit = 'shopinvader.customer.service'
 
     def _assign_cart_and_get_store_cache(self):
         res = super(Customer, self)._assign_cart_and_get_store_cache()
