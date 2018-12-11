@@ -94,7 +94,7 @@ class TestShopInvaderCustomerService(CommonCase):
         self.assertEqual(
             shopinvader_partner.sale_profile_id,
             self.profile_pro_tax_exc)
-        self.assertEqual(shopinvader_partner.is_company, True)
+        self.assertEqual(shopinvader_partner.is_company, False)
 
     def test_create_customer_exclude_sale_profile(self):
         """
